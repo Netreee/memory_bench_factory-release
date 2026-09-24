@@ -1,0 +1,26 @@
+schema_version = 2
+experiment_id = "diagnostic-office-smoke"
+track = "native"
+output_root = "output/eval"
+
+# benchmark 数据不在本仓库内；这里指向工作区里保留的历史候选快照（UNMET，仅供 smoke）。
+# 正式实验请改成 factory 的生成产物 output/runs/<run_id>/，或任意相对/绝对路径。
+[[benchmarks]]
+path = "../agent-harnesses/input/validated/office__20260902-121616"
+corpus_variant = "filtered"
+allow_unmet = true
+
+[[targets]]
+id = "builtin-diagnostic"
+system = "diagnostic.builtin"
+
+[protocol]
+version = "diagnostic-v1"
+network_mode = "closed"
+filler_policy = "as_provided"
+note = "内置离线控制面测试，不产生正式分数。"
+
+[execution]
+mode = "smoke"
+limit = 2
+seed = 0

@@ -1,0 +1,8 @@
+{
+  "env": {
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1"
+  },
+  "alwaysThinkingEnabled": false,
+  "model_reasoning_effort": "none"
+}

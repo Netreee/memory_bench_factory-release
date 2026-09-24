@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+.npm-cache/
+.npm-global/
+eval/output/
+**/memory_files/
+**/*.log
+**/queue.tee.log

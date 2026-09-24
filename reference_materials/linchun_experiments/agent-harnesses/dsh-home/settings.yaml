@@ -1,0 +1,60 @@
+# DeepSeek Harness 用户设置（热加载）。不含密钥：密钥走环境变量 OPENAI_API_KEY。
+# 生效位置：$DSH_HOME/settings.yaml，当前默认是 ~/.dsh/settings.yaml。
+#
+# 协议按模型拆，不要全家套 luna 的 reasoningEfforts: false。
+# - luna/terra：/v1/chat/completions 不能同时带 function tools + reasoning_effort，
+#   走 openai-responses，并声明非推理模型。
+# - sol：同走 responses；仍可能吐加密 rs_*，保持 false 降低回传验签失败。
+# - mini：是推理模型，关 reasoning 会过早停工具；走 responses 并开 low。
+# - 4o：非推理，走 responses 即可。
+# aiaiapi-chat 是 /v1/chat/completions 回退，供不兼容 responses 的对照。
+
+agent-default-model:
+  provider: aliyun
+  model: deepseek-v4-flash
+
+llm-pi-ai:
+  providers:
+    aiaiapi:
+      displayName: aiaiapi
+      apiKeyEnv: OPENAI_API_KEY
+      api: openai-responses
+      baseURL: https://api.aiaiapi.com/v1
+      models:
+        - id: gpt-5-mini-2025-08-07
+        - id: gpt-5.6-luna
+          reasoningEfforts: false
+        - id: gpt-5.6-terra
+          reasoningEfforts: false
+        - id: gpt-5.6-sol
+          reasoningEfforts: false
+        - id: gpt-5.4-mini
+          reasoningEfforts:
+            off: none
+            low: low
+            medium: medium
+        - id: gpt-4o
+    aiaiapi-chat:
+      displayName: aiaiapi chat
+      apiKeyEnv: OPENAI_API_KEY
+      api: openai-completions
+      baseURL: https://api.aiaiapi.com/v1
+      models:
+        - id: gpt-5.4-mini
+        - id: gpt-4o
+    aliyun:
+      displayName: aliyun maas
+      apiKeyEnv: OPENAI_API_KEY
+      api: openai-responses
+      baseURL: https://ws-g56fq4ve8j535aoe.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+      models:
+        - id: deepseek-v4-flash
+          reasoningEfforts: false
+    aliyun-chat:
+      displayName: aliyun maas chat
+      apiKeyEnv: OPENAI_API_KEY
+      api: openai-completions
+      baseURL: https://ws-g56fq4ve8j535aoe.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+      models:
+        - id: deepseek-v4-flash
+          reasoningEfforts: false

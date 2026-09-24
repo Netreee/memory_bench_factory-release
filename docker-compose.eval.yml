@@ -1,0 +1,86 @@
+# 评测用外部记忆系统依赖
+# 启动: docker compose -f docker-compose.eval.yml up -d
+# 停止: docker compose -f docker-compose.eval.yml down
+#
+# 前置:先启动本地 embed_server (宿主机 :9800):
+#   ./venv/bin/python -m services.embed_server --port 9800
+#
+# 服务       端口    给谁
+# qdrant     6333    mem0
+# postgres   5432    zep (内部)
+# zep        8998    zep adapter (embedding+LLM 都走宿主机 embed_server :9800)
+#
+# Zep CE 的 embedding 走本地 bge-small-zh-v1.5(embed_server),LLM 由 embed_server 透传上游。
+# MemOS 暂用云 API(MEMOS_API_KEY),后续如需自托管再加。
+
+services:
+
+  # ── Qdrant (mem0 向量库) ────────────────────────────────
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6343:6333"
+      - "6344:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  # ── Postgres (Zep CE 后端存储) ──────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: zep
+      POSTGRES_PASSWORD: zep_eval_2026
+      POSTGRES_DB: zep
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zep"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ── embed_server (容器内, zep 专用) ──────────────────────
+  # 本机防火墙挡了「容器→宿主」(无 sudo 改不了),host.docker.internal 那条路走不通;
+  # 所以 embed_server 以容器跑在 zep 同网络, zep 用服务名 embed_server:9800 访问(容器↔容器放行)。
+  #   embedding → 本地 bge-small-zh-v1.5 (CPU, 512维, 与其它系统同款 embedder = 公平)
+  #   LLM       → 代理到 DMXAPI(容器够不到宿主 vLLM:8000, 只能走外网 DMXAPI)
+  # 复用宿主 venv 的 site-packages(已验证 ABI 兼容 python:3.10-slim), 不重装依赖。
+  embed_server:
+    image: python:3.10-slim
+    working_dir: /app
+    volumes:
+      - .:/app
+      - ./venv/lib/python3.10/site-packages:/usr/local/lib/python3.10/site-packages:ro
+      - /home/ziqian/.cache/huggingface:/root/.cache/huggingface
+    environment:
+      - LLM_UPSTREAM=https://www.dmxapi.cn/v1
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - HF_HUB_OFFLINE=1
+    command: python -m services.embed_server --port 9800
+    restart: unless-stopped
+
+  # ── Zep CE (时序知识图) ─────────────────────────────────
+  # embedding + LLM 共用一个 endpoint → 指向容器内 embed_server:9800
+  zep:
+    image: ghcr.io/getzep/zep:latest
+    ports:
+      - "8998:8000"
+    volumes:
+      - ./zep-config.yaml:/app/config.yaml:ro
+    environment:
+      - ZEP_OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ZEP_LLM_OPENAIAPIKEY=${OPENAI_API_KEY}
+      - ZEP_LLM_OPENAIENDPOINT=http://embed_server:9800/v1
+      - ZEP_LLM_MODEL=DeepSeek-V4-Flash
+    depends_on:
+      postgres:
+        condition: service_healthy
+      embed_server:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:
+  pg_data:

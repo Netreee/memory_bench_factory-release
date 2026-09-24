@@ -1,0 +1,18 @@
+{
+  "adaptation": "Repository v2 interface integration; extraction and review workflow retained from supplied E-line skill.",
+  "sources": [
+    {
+      "name": "SKILL.md",
+      "original_path": "C:\\Users\\Ryan Leory\\xwechat_files\\wxid_8cnoowjx92mm22_3470\\temp\\RWTemp\\2026-09\\e463cd4fb8f58ef9d6f3dec94e1872db\\SKILL.md",
+      "sha256": "9f69ae6fd778417a561e68ddfdf30679c0d7e6b6b5180a557ff9cd516129205d"
+    },
+    {
+      "name": "SEEDJSON_GUIDE.md",
+      "original_path": "C:\\Users\\Ryan Leory\\xwechat_files\\wxid_8cnoowjx92mm22_3470\\temp\\RWTemp\\2026-09\\e463cd4fb8f58ef9d6f3dec94e1872db\\SEEDJSON_GUIDE.md",
+      "sha256": "52d2bf5b703caff9ea667f7ce7225e4f10709f9aa932293e75eaba6f54912770"
+    }
+  ],
+  "original_files_modified": false,
+  "runtime_schema": "schemas/seed_pack_v2.schema.json",
+  "runtime_validator": "pipeline.seed_pack.validate_seed_pack"
+}
